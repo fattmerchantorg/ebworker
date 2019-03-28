@@ -1,0 +1,26 @@
+{
+  "name": "ebworker",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon ./src/index.js"
+  },
+  "author": "david johnson <david.j.c.johnson@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "aws-sdk": "^2.430.0",
+    "axios": "^0.18.0",
+    "body-parser": "^1.15.2",
+    "cors": "^2.8.0",
+    "dotenv": "^2.0.0",
+    "express": "^4.14.0",
+    "lodash": "^4.17.4",
+    "nodemon": "^1.12.1",
+    "request": "^2.76.0"
+  },
+  "devDependencies": {
+    "babel-polyfill": "^6.26.0",
+    "babel-register": "^6.26.0"
+  }
+}
