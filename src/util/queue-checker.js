@@ -76,7 +76,7 @@ module.exports = {
       },
       region: process.env.AWS_SQS_REGION
     });
-
+    
     setInterval(checkQueue, process.env.EBW_CHECK_INTERVAL || 5000);
   }
 };
