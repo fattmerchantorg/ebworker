@@ -1,9 +1,10 @@
 const AWS = require("aws-sdk");
 const axios = require("axios");
 
-const deleteMessage = async () => {
+const deleteMessage = async (data) => {
   const sqs = new AWS.SQS();
   const queueUrl = process.env.AWS_SQS_PREFIX + "/" + process.env.AWS_SQS_NAME;
+
   const params = {
     QueueUrl: queueUrl,
     ReceiptHandle: data.Messages[0].ReceiptHandle
@@ -20,13 +21,10 @@ const deleteMessage = async () => {
 
 const postJob = job => {
   return axios({
-    url: process.env.EBW_WORKER_URL,
+    url: process.env.EBW_POST_URL,
     method: "post",
     data: job
   })
-    .then(function(result) {
-      return result.data;
-    })
     .catch(function(error) {
       // rethrow axios errors
       throw get(error, "response.data");
@@ -52,12 +50,12 @@ const checkQueue = async () => {
         if (error) {
           console.error("got error", error);
           throw error;
-        } else if (data.Messages) {
+        } else if (data && data.Messages) {
           console.log("got messages", data.Messages.length);
 
-          await deleteMessage(sqs, deleteParams);
           const job = JSON.parse(data.Messages[0].Body);
-          postJob(job);
+          await postJob(job)
+          await deleteMessage(data);
         } else {
           console.log('nothing in queue')
         }
