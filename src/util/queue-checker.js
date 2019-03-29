@@ -94,7 +94,7 @@ const checkQueue = async () => {
 };
 
 const startChecking = () => {
-  let ms = process.env.EBW_CHECK_INTERVAL || 5000;
+  let ms = (process.env.EBW_CHECK_INTERVAL_SECONDS || 5) * 1000;
   let spinner = ora({ interval: 1000, spinner: "line" });
 
   countdown.start({
