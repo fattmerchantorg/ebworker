@@ -1,7 +1,26 @@
 const AWS = require("aws-sdk");
 const axios = require("axios");
+const ora = require("ora");
 
-const deleteMessage = async (data) => {
+const countdown = require("./countdown");
+
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  apiVersions: {
+    sqs: "2012-11-05"
+  },
+  region: process.env.AWS_SQS_REGION
+});
+
+const timestamp = () => {
+  const date = new Date();
+  return `[${date.toLocaleString()}]`;
+};
+
+const deleteMessage = async data => {
+  const spinner = ora("deleting message from queue...").start();
+
   const sqs = new AWS.SQS();
   const queueUrl = process.env.AWS_SQS_PREFIX + "/" + process.env.AWS_SQS_NAME;
 
@@ -11,34 +30,42 @@ const deleteMessage = async (data) => {
   };
 
   await sqs.deleteMessage(params, (error, data) => {
+    spinner.stop();
+
     if (error) {
-      console.error(error);
+      spinner.fail(`${timestamp()} error deleting message: ${error}`);
     } else {
-      console.log("deleted message");
+      spinner.succeed(`${timestamp()} deleted message`);
     }
   });
 };
 
-const postJob = job => {
-  return axios({
-    url: process.env.EBW_POST_URL,
-    method: "post",
-    data: job
-  })
-    .catch(function(error) {
-      // rethrow axios errors
-      throw get(error, "response.data");
+const postJob = async job => {
+  const spinner = ora("posting job...").start();
+
+  try {
+    await axios({
+      url: process.env.EBW_POST_URL,
+      method: "post",
+      data: job
     });
+
+    spinner.succeed(`${timestamp()} posted job`);
+  } catch (error) {
+    spinner.fail(`${timestamp()} error posting job: ${error}`);
+    // rethrow axios errors
+    throw error.response.data;
+  }
 };
 
 const checkQueue = async () => {
   const sqs = new AWS.SQS();
   const queueUrl = process.env.AWS_SQS_PREFIX + "/" + process.env.AWS_SQS_NAME;
 
-  console.log("checking queue");
+  const spinner = ora("checking queue...").start();
 
-  try {
-    await sqs.receiveMessage(
+  return new Promise(resolve => {
+    sqs.receiveMessage(
       {
         QueueUrl: `${queueUrl}`,
         AttributeNames: ["All"],
@@ -48,35 +75,45 @@ const checkQueue = async () => {
       },
       async (error, data) => {
         if (error) {
-          console.error("got error", error);
-          throw error;
+          spinner.fail(
+            `${timestamp()} received error checking queue: ${error}`
+          );
         } else if (data && data.Messages) {
-          console.log("got messages", data.Messages.length);
-
+          spinner.succeed(`${timestamp()} received message from queue`);
           const job = JSON.parse(data.Messages[0].Body);
-          await postJob(job)
+          await postJob(job);
           await deleteMessage(data);
         } else {
-          console.log('nothing in queue')
+          spinner.info(`${timestamp()} received nothing from queue`);
         }
+
+        resolve();
       }
     );
-  } catch (error) {
-    console.error(error);
-  }
+  });
 };
 
-module.exports = {
-  startChecking: () => {
-    AWS.config.update({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      apiVersions: {
-        sqs: "2012-11-05"
-      },
-      region: process.env.AWS_SQS_REGION
-    });
-    
-    setInterval(checkQueue, process.env.EBW_CHECK_INTERVAL || 5000);
-  }
+const startChecking = () => {
+  let ms = process.env.EBW_CHECK_INTERVAL || 5000;
+  let spinner = ora({ interval: 1000, spinner: "line" });
+
+  countdown.start({
+    ms: ms,
+    onTick: elapsedTime => {
+      const text = `checking queue in: ${(ms - elapsedTime) / 1000}s`;
+
+      if (!spinner.isSpinning) {
+        spinner.start(text);
+      } else {
+        spinner.text = text;
+      }
+    },
+    onFinish: async () => {
+      spinner.stop();
+      await checkQueue();
+      startChecking();
+    }
+  });
 };
+
+module.exports = { startChecking };
