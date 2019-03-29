@@ -6,6 +6,6 @@ try {
   console.error("No .env file");
 }
 
-const queueChecker = require("./util/queue-checker")
+const queueChecker = require("./queue-checker");
 
 queueChecker.startChecking();

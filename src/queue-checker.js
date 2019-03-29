@@ -2,8 +2,6 @@ const AWS = require("aws-sdk");
 const axios = require("axios");
 const ora = require("ora");
 
-const countdown = require("./countdown");
-
 AWS.config.update({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -94,26 +92,31 @@ const checkQueue = async () => {
 };
 
 const startChecking = () => {
-  let ms = (process.env.EBW_CHECK_INTERVAL_SECONDS || 5) * 1000;
-  let spinner = ora({ interval: 1000, spinner: "line" });
+  let interval = null;
+  let elapsedTime = 0;
+  const ms = (process.env.EBW_CHECK_INTERVAL_SECONDS || 5) * 1000;
+  const spinner = ora({ spinner: "line" });
 
-  countdown.start({
-    ms: ms,
-    onTick: elapsedTime => {
-      const text = `checking queue in: ${(ms - elapsedTime) / 1000}s`;
+  const setSpinnerText = () => {
+    spinner.text = `checking queue in: ${(ms - elapsedTime) / 1000}s`;
+    spinner.render();
+  };
 
-      if (!spinner.isSpinning) {
-        spinner.start(text);
-      } else {
-        spinner.text = text;
-      }
-    },
-    onFinish: async () => {
-      spinner.stop();
-      await checkQueue();
-      startChecking();
-    }
-  });
+  const onFinish = async () => {
+    clearInterval(interval);
+    await checkQueue();
+    startChecking();
+  };
+
+  const onTick = async () => {
+    elapsedTime += 1000;
+    setSpinnerText();
+    if (elapsedTime >= ms) onFinish();
+  };
+
+  setSpinnerText();
+
+  interval = setInterval(onTick, 1000);
 };
 
 module.exports = { startChecking };
