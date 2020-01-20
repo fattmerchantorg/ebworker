@@ -38,14 +38,17 @@ const deleteMessage = async data => {
   });
 };
 
-const postJob = async job => {
+const postJob = async (id, job) => {
   const spinner = ora("posting job...").start();
 
   try {
     await axios({
       url: process.env.EBW_POST_URL,
       method: "post",
-      data: job
+      data: job,
+      headers: {
+        "X-Aws-Sqsd-Msgid": id
+      }
     });
 
     spinner.succeed(`${timestamp()} posted job`);
@@ -77,9 +80,9 @@ const checkQueue = async () => {
             `${timestamp()} received error checking queue: ${error}`
           );
         } else if (data && data.Messages) {
-          spinner.succeed(`${timestamp()} received message from queue`);
-          const job = JSON.parse(data.Messages[0].Body);
-          await postJob(job);
+          const { MessageId: id, Body: job }  = data.Messages[0];
+          spinner.succeed(`Message received: ${id}`);
+          await postJob(id, JSON.parse(job));
           await deleteMessage(data);
         } else {
           spinner.info(`${timestamp()} received nothing from queue`);
