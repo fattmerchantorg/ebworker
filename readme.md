@@ -8,7 +8,8 @@ Installation:
 
 ```
 touch .env
-npm install```
+npm install
+```
 
 Example .env file:
 
@@ -28,3 +29,7 @@ EBW_CHECK_INTERVAL_SECONDS=0
 EBW_POST_URL=http://localhost:8000/ebworker/job
 ```
 
+## Screenshot 
+
+
+![screenshot](https://user-images.githubusercontent.com/15964/66140004-f9dff480-e5c6-11e9-842f-8b6e8759a5f3.png)
