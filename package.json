@@ -12,7 +12,7 @@
     "aws-sdk": "^2.430.0",
     "axios": "^0.18.1",
     "dotenv": "^2.0.0",
-    "nodemon": "^1.12.1",
+    "nodemon": "^1.19.4",
     "ora": "^3.2.0"
   },
   "devDependencies": {
