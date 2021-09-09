@@ -9,7 +9,7 @@
   "author": "david johnson <david.j.c.johnson@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "aws-sdk": "^2.430.0",
+    "aws-sdk": "^2.972.0",
     "axios": "^0.18.1",
     "dotenv": "^2.0.0",
     "nodemon": "^1.12.1",
