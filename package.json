@@ -4,14 +4,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon ./src/index.js"
+    "start": "node ./src/index.js"
   },
   "author": "david johnson <david.j.c.johnson@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@fast-csv/format": "^4.3.5",
+    "@fast-csv/parse": "^4.3.6",
     "aws-sdk": "^2.430.0",
     "axios": "^0.18.1",
     "dotenv": "^2.0.0",
+    "fast-csv": "^4.3.6",
     "nodemon": "^1.12.1",
     "ora": "^3.2.0"
   },

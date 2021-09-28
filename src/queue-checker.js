@@ -51,7 +51,7 @@ const postJob = async (id, job) => {
       }
     });
 
-    spinner.succeed(`${timestamp()} posted job`);
+    spinner.succeed(`${timestamp()} posted job to ${process.env.EBW_POST_URL}`);
   } catch (error) {
     spinner.fail(`${timestamp()} error posting job: ${error}`);
     // rethrow axios errors
