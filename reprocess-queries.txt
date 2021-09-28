@@ -1,0 +1,18 @@
+# FOR FINDING FROM REGISTRATION
+
+select rp.external_id as external_id, r.merchant_id as fmapimerchantid from reprocess_settlements as rp
+join registrations as r on r.finix_merchant_id = rp.finix_merchant_id
+
+# FOR FINDING FROM GATEWAY
+
+select rp.external_id as external_id from reprocess_settlements as rp
+left join registrations as r on r.finix_merchant_id = rp.finix_merchant_id
+where r.merchant_id is null
+
+# take results and put into: 
+
+select rp.external_id, mg.merchant_id from reprocess_settlements as rp
+join merchant_gateways as mg 
+	on mg.keys->"$.credentials.finixMerchantId" = rp.finix_merchant_id
+	and mg.name = "finix"
+where rp.external_id in (results)
