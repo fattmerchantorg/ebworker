@@ -11,4 +11,4 @@ try {
 // queueChecker.startChecking();
 
 const settlement = require("./settlement-finder");
-settlement.writeCsv();
+// settlement.writeCsv();
