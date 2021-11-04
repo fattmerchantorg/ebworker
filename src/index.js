@@ -7,8 +7,10 @@ try {
 }
 
 // const queueChecker = require("./queue-checker");
-
 // queueChecker.startChecking();
 
-const settlement = require("./settlement-finder");
+// const settlement = require("./settlement-finder");
 // settlement.writeCsv();
+
+const driver = require("./processed-settlement-window-updater");
+driver.run();
