@@ -1,8 +1,4 @@
 const axios = require("axios");
-const ora = require("ora");
-const fs = require("fs");
-const csv = require("fast-csv");
-const { format } = require("@fast-csv/format");
 const { db } = require("../util/db-util");
 
 const basicAuth = (finixAccessId, finixSecureKey) =>
@@ -36,17 +32,20 @@ const fetchSingleFinixSettlement = async (settlementId) => {
 };
 
 const run = async () => {
-  const start = "2021-08-01 00:00:00";
+  const start = "2021-05-01 00:00:00";
   const end = "2021-12-01 00:00:00";
+  const limit = 200;
+
   const rows = await new Promise((resolve, reject) => {
     db().query(
       `
       SELECT ps.id, ps.external_id 
       FROM fatt.processed_settlements AS ps
       WHERE ps.created_at BETWEEN ? AND ?
-      AND ps.window_start_at IS NULL
+      AND ps.external_created_at IS NULL
+      LIMIT ?
   `,
-      [start, end],
+      [start, end, limit],
       (error, rows) => {
         if (error) {
           reject(error);
@@ -57,17 +56,19 @@ const run = async () => {
     );
   });
 
+  if (!rows.length) {
+    console.log("no results");
+    process.exit();
+  }
+
   // return console.log(rows);
 
   await Promise.all(
     rows.map(async (row) => {
       const settlement = await fetchSingleFinixSettlement(row.external_id);
       const bindings = [
-        settlement.window_start
-          ? settlement.window_start.slice(0, 19).replace("T", " ")
-          : null,
-        settlement.window_end
-          ? settlement.window_end.slice(0, 19).replace("T", " ")
+        settlement.created_at
+          ? settlement.created_at.slice(0, 19).replace("T", " ")
           : null,
         row.id,
       ];
@@ -76,7 +77,7 @@ const run = async () => {
         db().query(
           `
           UPDATE fatt.processed_settlements
-          SET window_start_at = ?, window_end_at = ?
+          SET external_created_at = ?
           WHERE id = ?
         `,
           bindings,
