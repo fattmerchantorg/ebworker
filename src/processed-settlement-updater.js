@@ -86,6 +86,8 @@ const run = async () => {
       });
     })
   );
+
+  process.exit();
 };
 
 module.exports = { run };

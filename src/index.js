@@ -6,11 +6,7 @@ try {
   console.error("No .env file");
 }
 
-// const queueChecker = require("./queue-checker");
-// queueChecker.startChecking();
-
-// const settlement = require("./settlement-finder");
-// settlement.writeCsv();
-
-const driver = require("./processed-settlement-updater");
-driver.run();
+// require("./queue-checker").startChecking();
+// const settlement = require("./settlement-finder").writeCsv();
+// require("./processed-settlement-updater").run();
+// require("./fee-transaction_id-updater").run();
