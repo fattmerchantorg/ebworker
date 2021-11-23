@@ -10,3 +10,4 @@ try {
 // const settlement = require("./settlement-finder").writeCsv();
 // require("./processed-settlement-updater").run();
 // require("./fee-transaction_id-updater").run();
+require("./update-finix-merchant-identities").run();
