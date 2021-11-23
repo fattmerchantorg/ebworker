@@ -28,11 +28,12 @@ const fattDbName = process.env.DB_DATABASE;
 let paginateFrom = 0;
 let paginateTo = 500;
 
-const run = async () => {
-  const outputCsvStream = format({ headers: true });
-  const outputWriteStream = fs.createWriteStream("csv/output.csv");
-  outputCsvStream.pipe(outputWriteStream);
+const outputCsvStream = format({ headers: true });
+const outputWriteStream = fs.createWriteStream("csv/output.csv");
+outputCsvStream.pipe(outputWriteStream);
 
+const run = async () => {
+  
   // Fetch rows from fatt where there is a valid Finix Identity
   const rows = await new Promise((resolve, reject) => {
     db().query(
@@ -62,20 +63,7 @@ const run = async () => {
     process.exit();
   }
 
-
-  await Promise.all(rows.map(async (row, index) => {
-    outputCsvStream.write({
-      hello: index
-    });
-  }));
-
-  process.exit();
-
   for (const row of rows) {
-    outputCsvStream.write({
-      hello: 'world'
-    });
-    continue;
     let o = {
       PMID: row.id,
       finix_identity_id: row.finix_identity_id,
@@ -98,9 +86,9 @@ const run = async () => {
       console.log(`Updated Transaction Limit For Indentity ID: ${row.finix_identity_id}`);
       
     } catch(e) {
-      // o.error_identity = e && e.response && e.response.data && JSON.stringify(e.response.data);
-      // o.error_identity = o.error_identity ? o.error_identity : e;
-      console.log('Error PUT request for /identities/:ID', e);
+      o.error_identity = e && e.response && e.response.data && JSON.stringify(e.response.data);
+      o.error_identity = o.error_identity ? o.error_identity : e;
+      console.log(`Error PUT request for /identities/${row.finix_identity_id}`, e);
     }
 
     try {
@@ -113,16 +101,20 @@ const run = async () => {
       });
       console.log(`Provisioned For Finix Merchant ID: ${row.finix_identity_id}`);
     } catch(e) {
-      // o.error_provision = e && e.response && e.response.data && JSON.stringify(e.response.data);
-      // o.error_provision = o.error_provision ? o.error_provision : e;
-      console.log('Error POST request for /merchants/:ID/verifications', e);
+      o.error_provision = e && e.response && e.response.data && JSON.stringify(e.response.data);
+      o.error_provision = o.error_provision ? o.error_provision : e;
+      console.log(`Error POST request for /merchants/${row.finix_identity_id}/verifications`, e);
     }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000)); // sleep to write to csv
+
+    outputCsvStream.write(o);
   }
 
   paginateFrom = paginateFrom + 500;
   paginateTo = paginateTo + 500;
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await new Promise((resolve) => setTimeout(resolve, 2000)); // sleep
 
   run();
   
