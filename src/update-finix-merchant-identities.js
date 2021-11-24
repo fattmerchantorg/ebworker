@@ -108,7 +108,7 @@ const run = async () => {
       console.log(`Error POST request for /merchants/${row.finix_identity_id}/verifications`, e);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 1000)); // sleep to write to csv
+    await new Promise((resolve) => setTimeout(resolve, 5000)); // sleep to write to csv and to prevent rate limit on Worldpay call
 
     outputCsvStream.write(o);
   }
