@@ -43,6 +43,8 @@ const run = async () => {
       join ${fattDbName}.registrations as r
         on m.id = r.merchant_id
       where m.brand != ?
+      and brand != ''
+      and brand is not null
       and m.is_payfac = 1
       and r.finix_identity_id != ""
       limit ?,?
