@@ -78,19 +78,17 @@ const run = async () => {
     };
     try {
       // Update the merchant identity in FINIX
-      if (row.id == 'abcab68d-94e5-43ac-8ec5-fc8cdbfb55b7') {
-        await axios({
-          url: `${process.env.FINIX_BASE_URL}/identities/${row.finix_identity_id}`,
-          data: {
-            entity: {
-              max_transaction_amount: 50000000, // Up transaction limit to $500,000
-            }
-          },
-          method: "put",
-          headers,
-        });
-        console.log(`Updated Transaction Limit For Indentity ID: ${row.finix_identity_id}`);
-      }
+      await axios({
+        url: `${process.env.FINIX_BASE_URL}/identities/${row.finix_identity_id}`,
+        data: {
+          entity: {
+            max_transaction_amount: 50000000, // Up transaction limit to $500,000
+          }
+        },
+        method: "put",
+        headers,
+      });
+      console.log(`Updated Transaction Limit For Indentity ID: ${row.finix_identity_id}`);
     } catch(e) {
       o.error_identity = e && e.response && e.response.data && JSON.stringify(e.response.data);
       o.error_identity = o.error_identity ? o.error_identity : e;
