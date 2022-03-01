@@ -25,12 +25,11 @@ const headers = finixHeaders(
 
 const fattDbName = process.env.DB_DATABASE;
 
-let paginateFrom = 0;
-let paginateTo = 500;
-
 const outputCsvStream = format({ headers: true });
 const outputWriteStream = fs.createWriteStream("csv/output.csv");
 outputCsvStream.pipe(outputWriteStream);
+
+const whereIn = ` and m.id IN ()`;
 
 const run = async () => {
   
@@ -43,13 +42,17 @@ const run = async () => {
       join ${fattDbName}.registrations as r
         on m.id = r.merchant_id
       where m.brand != ?
+      and m.brand != ?
       and brand != ''
       and brand is not null
       and m.is_payfac = 1
       and r.finix_identity_id != ""
-      limit ?,?
+      and r.finix_merchant_id IS NOT NULL
+      and r.finix_merchant_id != ""
+      and r.finix_merchant_id != "-"
+      ${whereIn}
   `,
-      ['fattmerchant', paginateFrom, paginateTo],
+      ['fattmerchant', 'paymentdepot'],
       (error, rows) => {
         if (error) {
           reject(error);
@@ -75,22 +78,23 @@ const run = async () => {
     };
     try {
       // Update the merchant identity in FINIX
-      await axios({
-        url: `${process.env.FINIX_BASE_URL}/identities/${row.finix_identity_id}`,
-        data: {
-          entity: {
-            max_transaction_amount: 50000000, // Up transaction limit to $500,000
-          }
-        },
-        method: "put",
-        headers,
-      });
-      console.log(`Updated Transaction Limit For Indentity ID: ${row.finix_identity_id}`);
-      
+      if (row.id == 'abcab68d-94e5-43ac-8ec5-fc8cdbfb55b7') {
+        await axios({
+          url: `${process.env.FINIX_BASE_URL}/identities/${row.finix_identity_id}`,
+          data: {
+            entity: {
+              max_transaction_amount: 50000000, // Up transaction limit to $500,000
+            }
+          },
+          method: "put",
+          headers,
+        });
+        console.log(`Updated Transaction Limit For Indentity ID: ${row.finix_identity_id}`);
+      }
     } catch(e) {
       o.error_identity = e && e.response && e.response.data && JSON.stringify(e.response.data);
       o.error_identity = o.error_identity ? o.error_identity : e;
-      console.log(`Error PUT request for /identities/${row.finix_identity_id}`, e);
+      console.log(`Error PUT request for /identities/${row.finix_identity_id}`, e.response.data);
     }
 
     try {
@@ -101,24 +105,19 @@ const run = async () => {
         data: {},
         headers,
       });
-      console.log(`Provisioned For Finix Merchant ID: ${row.finix_identity_id}`);
+      console.log(`Provisioned For Finix Merchant ID: ${row.finix_merchant_id}`);
     } catch(e) {
       o.error_provision = e && e.response && e.response.data && JSON.stringify(e.response.data);
       o.error_provision = o.error_provision ? o.error_provision : e;
-      console.log(`Error POST request for /merchants/${row.finix_identity_id}/verifications`, e);
+      console.log(`Error POST request for /merchants/${row.finix_merchant_id}/verifications`, e.response.data);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 5000)); // sleep to write to csv and to prevent rate limit on Worldpay call
+    await new Promise((resolve) => setTimeout(resolve, 10000)); // sleep to write to csv and to prevent rate limit on Worldpay call
 
     outputCsvStream.write(o);
   }
 
-  paginateFrom = paginateFrom + 500;
-  paginateTo = paginateTo + 500;
-
-  await new Promise((resolve) => setTimeout(resolve, 2000)); // sleep
-
-  run();
+  process.exit();
   
 };
 
