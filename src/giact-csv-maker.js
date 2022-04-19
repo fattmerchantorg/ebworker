@@ -75,6 +75,8 @@ const upper = (s) => {
 };
 
 const run = async () => {
+  console.log("running giact-csv-maker...");
+
   const registrations = await getRegistrations();
 
   console.log(`found ${registrations.length} registrations matching query`);
@@ -158,51 +160,53 @@ const run = async () => {
 
     count += 2;
 
-    try {
-      const representatives = JSON.parse(r.meta).representatives;
+    if (r.meta && r.meta.includes("representatives")) {
+      try {
+        const representatives = JSON.parse(r.meta).representatives;
 
-      representatives.forEach((representative) => {
-        const asrow = baseRow();
+        representatives.forEach((representative) => {
+          const asrow = baseRow();
 
-        // additional signer
-        asrow.RoutingNumber = null;
-        asrow.AccountNumber = null;
-        asrow.CheckNumber = null;
-        asrow.Amount = null;
-        asrow.UniqueID = md5(
-          upper(representative.first_name),
-          upper(representative.last_name),
-          upper(representative.date_of_birth)
-        );
-        asrow.NamePrefix = null;
-        asrow.FirstName = representative.first_name;
-        asrow.MiddleName = null;
-        asrow.LastName = representative.last_name;
-        asrow.NameSuffix = null;
-        asrow.BusinessName = null;
-        asrow.AddressLine1 = representative.address_1;
-        asrow.AddressLine2 = representative.address_2;
-        asrow.City = representative.address_city;
-        asrow.State = representative.address_state;
-        asrow.ZipCode = representative.address_zip;
-        asrow.HomePhoneNumber = representative.phone;
-        asrow.WorkPhoneNumber = null;
-        asrow.TaxID = representative.ssn;
-        asrow.DateOfBirth = representative.date_of_birth;
-        asrow.IDType = null;
-        asrow.DLNumber = null;
-        asrow.DLState = null;
-        asrow.EmailAddress = null;
-        asrow.BankAccountType = null;
-        asrow.Country = null;
-        asrow.CurrentIpAddress = r.user_ip;
+          // additional signer
+          asrow.RoutingNumber = null;
+          asrow.AccountNumber = null;
+          asrow.CheckNumber = null;
+          asrow.Amount = null;
+          asrow.UniqueID = md5(
+            upper(representative.first_name),
+            upper(representative.last_name),
+            upper(representative.date_of_birth)
+          );
+          asrow.NamePrefix = null;
+          asrow.FirstName = representative.first_name;
+          asrow.MiddleName = null;
+          asrow.LastName = representative.last_name;
+          asrow.NameSuffix = null;
+          asrow.BusinessName = null;
+          asrow.AddressLine1 = representative.address_1;
+          asrow.AddressLine2 = representative.address_2;
+          asrow.City = representative.address_city;
+          asrow.State = representative.address_state;
+          asrow.ZipCode = representative.address_zip;
+          asrow.HomePhoneNumber = representative.phone;
+          asrow.WorkPhoneNumber = null;
+          asrow.TaxID = representative.ssn;
+          asrow.DateOfBirth = representative.date_of_birth;
+          asrow.IDType = null;
+          asrow.DLNumber = null;
+          asrow.DLState = null;
+          asrow.EmailAddress = null;
+          asrow.BankAccountType = null;
+          asrow.Country = null;
+          asrow.CurrentIpAddress = r.user_ip;
 
-        count++;
+          count++;
 
-        csvStream.write(asrow);
-      });
-    } catch (error) {
-      console.log(error);
+          csvStream.write(asrow);
+        });
+      } catch (error) {
+        console.log(r.merchant_id, r.meta, error);
+      }
     }
   });
 
