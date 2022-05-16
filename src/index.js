@@ -11,4 +11,5 @@ try {
 // require("./processed-settlement-updater").run();
 // require("./fee-transaction_id-updater").run();
 // require("./pmid-finder").run();
-require("./fee-profile-updater").run();
+// require("./fee-profile-updater").run();
+require("./mcc-thing").writeCsv();
